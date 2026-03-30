@@ -1,0 +1,1 @@
+Buat program (Java & Python) menggunakan struktur data BST dengan fitur program terdiri dari: tambah data, cari data, hapus data, dan traversal (inorder, preorder, postorder). Untuk testing program, inputkan seluruh data (id dan nama) yang ada dalam file excel berikut (terlampir).
