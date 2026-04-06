@@ -1,8 +1,8 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.Scanner;
 
+// ================= NODE =================
 class Node {
     int id;
     String nama;
@@ -15,191 +15,193 @@ class Node {
     }
 }
 
+// ================= BST =================
 class BST {
     Node root;
 
-    BST() {
-        root = null;
-    }
+    // INSERT
+    Node insert(Node root, int id, String nama) {
+        if (root == null) return new Node(id, nama);
 
-    // 1. Tambah Data
-    void insert(int id, String nama) {
-        root = insertRec(root, id, nama);
-    }
-
-    Node insertRec(Node root, int id, String nama) {
-        if (root == null) {
-            root = new Node(id, nama);
-            return root;
-        }
         if (id < root.id)
-            root.left = insertRec(root.left, id, nama);
-        else if (id > root.id)
-            root.right = insertRec(root.right, id, nama);
+            root.left = insert(root.left, id, nama);
         else
-            root.nama = nama; // Perbarui jika ID duplikat
+            root.right = insert(root.right, id, nama);
+
         return root;
     }
 
-    // 2. Cari Data
-    Node search(int id) {
-        Node result = searchRec(root, id);
-        if (result != null) {
-            System.out.println("Data ditemukan: ID = " + result.id + ", Nama = " + result.nama);
-        } else {
-            System.out.println("Data dengan ID " + id + " tidak ditemukan.");
-        }
-        return result;
+    // SEARCH
+    Node search(Node root, int id) {
+        if (root == null || root.id == id) return root;
+
+        if (id < root.id)
+            return search(root.left, id);
+        else
+            return search(root.right, id);
     }
 
-    Node searchRec(Node root, int id) {
-        if (root == null || root.id == id)
-            return root;
-        if (root.id > id)
-            return searchRec(root.left, id);
-        return searchRec(root.right, id);
+    // MIN VALUE (untuk delete)
+    Node minValue(Node node) {
+        while (node.left != null)
+            node = node.left;
+        return node;
     }
 
-    // 3. Hapus Data
-    void delete(int id) {
-        root = deleteRec(root, id);
-    }
-
-    Node deleteRec(Node root, int id) {
+    // DELETE
+    Node delete(Node root, int id) {
         if (root == null) return root;
 
         if (id < root.id)
-            root.left = deleteRec(root.left, id);
+            root.left = delete(root.left, id);
         else if (id > root.id)
-            root.right = deleteRec(root.right, id);
+            root.right = delete(root.right, id);
         else {
-            // Kasus 1 atau 0 child
+            // 1 atau 0 child
             if (root.left == null) return root.right;
             else if (root.right == null) return root.left;
 
-            // Kasus 2 child: Ambil penerus inorder (terkecil di subtree kanan)
-            Node temp = minValueNode(root.right);
+            // 2 child
+            Node temp = minValue(root.right);
+
             root.id = temp.id;
             root.nama = temp.nama;
-            root.right = deleteRec(root.right, temp.id);
+
+            root.right = delete(root.right, temp.id);
         }
         return root;
     }
 
-    Node minValueNode(Node root) {
-        Node minv = root;
-        while (minv.left != null) {
-            minv = minv.left;
-        }
-        return minv;
-    }
-
-    // 4. Traversal
-    void inorder(Node node) {
-        if (node != null) {
-            inorder(node.left);
-            System.out.print("[" + node.id + "] " + node.nama + " -> ");
-            inorder(node.right);
+    // TRAVERSAL
+    void inorder(Node root) {
+        if (root != null) {
+            inorder(root.left);
+            System.out.println(root.id + " | " + root.nama);
+            inorder(root.right);
         }
     }
 
-    void preorder(Node node) {
-        if (node != null) {
-            System.out.print("[" + node.id + "] " + node.nama + " -> ");
-            preorder(node.left);
-            preorder(node.right);
+    void preorder(Node root) {
+        if (root != null) {
+            System.out.println(root.id + " | " + root.nama);
+            preorder(root.left);
+            preorder(root.right);
         }
     }
 
-    void postorder(Node node) {
-        if (node != null) {
-            postorder(node.left);
-            postorder(node.right);
-            System.out.print("[" + node.id + "] " + node.nama + " -> ");
+    void postorder(Node root) {
+        if (root != null) {
+            postorder(root.left);
+            postorder(root.right);
+            System.out.println(root.id + " | " + root.nama);
         }
     }
 }
 
-public class BinarySearchTree{
-    public static void main(String[] args) {
-    BST bst = new BST();
-    String file = "data100.xlsx-data_barang.csv"; // Pastikan nama filenya sesuai dengan punyamu ya
-    String line;
+// ================= MAIN =================
+public class BinarySearchTree {
 
-    // 1. Memuat data dari file saat program pertama kali jalan
-    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-        br.readLine(); // Melewati baris header
-        while ((line = br.readLine()) != null) {
-            String[] data = line.split(";"); // Memakai titik koma sesuai datamu
-            if (data.length >= 2) {
-                try {
-                    int id = Integer.parseInt(data[0].replace("\"", "").trim());
-                    String nama = data[1].replace("\"", "").trim();
-                    bst.insert(id, nama);
-                } catch (NumberFormatException ex) {
-                    // Abaikan baris kosong atau error
-                }
+    // LOAD CSV
+    static void loadCSV(String fileName, BST bst) {
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(fileName));
+            String line;
+
+            br.readLine(); // skip header
+
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(",");
+
+                int id = Integer.parseInt(data[0]);
+                String nama = data[1];
+              
+
+                bst.root = bst.insert(bst.root, id, nama);
             }
+
+            br.close();
+        } catch (Exception e) {
+            System.out.println("Gagal membaca CSV: " + e.getMessage());
         }
-        System.out.println("Data dari CSV berhasil dimuat!\n");
-    } catch (IOException e) {
-        System.out.println("Error membaca file: " + e.getMessage());
     }
 
-    // 2. Membuat Menu Interaktif
-    Scanner scanner = new Scanner(System.in);
-    int pilihan = 0;
+    // ================= PROGRAM =================
+    public static void main(String[] args) {
+        BST bst = new BST();
+        Scanner sc = new Scanner(System.in);
 
-    while (pilihan != 5) {
-        System.out.println("\n=== MENU BST DATA BARANG ===");
-        System.out.println("1. Tambah Data");
-        System.out.println("2. Cari Data");
-        System.out.println("3. Hapus Data");
-        System.out.println("4. Tampilkan Data (Inorder)");
-        System.out.println("5. Keluar");
-        System.out.print("Pilih menu (1-5): ");
-        
-        try {
-            pilihan = scanner.nextInt();
-            scanner.nextLine(); // Membersihkan sisa enter / newline
+        // Load data dari CSV (TIDAK langsung tampil)
+        loadCSV("data100.xlsx-data_barang.csv", bst);
+
+        while (true) {
+            System.out.println("\n=== MENU ===");
+            System.out.println("1. Tambah Data");
+            System.out.println("2. Cari Data");
+            System.out.println("3. Hapus Data");
+            System.out.println("4. Inorder");
+            System.out.println("5. Preorder");
+            System.out.println("6. Postorder");
+            System.out.println("7. Keluar");
+
+            System.out.print("Pilih: ");
+            int pilihan = sc.nextInt();
 
             switch (pilihan) {
                 case 1:
-                    System.out.print("Masukkan ID Barang (Angka): ");
-                    int idBaru = scanner.nextInt();
-                    scanner.nextLine(); // Membersihkan newline
-                    System.out.print("Masukkan Nama Barang: ");
-                    String namaBaru = scanner.nextLine();
-                    bst.insert(idBaru, namaBaru);
+                    System.out.print("ID: ");
+                    int id = sc.nextInt();
+                    sc.nextLine();
+
+                    System.out.print("Nama: ");
+                    String nama = sc.nextLine();
+
+                    bst.root = bst.insert(bst.root, id, nama);
                     System.out.println("Data berhasil ditambahkan!");
                     break;
+
                 case 2:
-                    System.out.print("Masukkan ID Barang yang dicari: ");
-                    int idCari = scanner.nextInt();
-                    bst.search(idCari);
+                    System.out.print("Cari ID: ");
+                    int cari = sc.nextInt();
+
+                    Node hasil = bst.search(bst.root, cari);
+                    if (hasil != null) {
+                        System.out.println("Ditemukan:");
+                        System.out.println(hasil.id + " | " + hasil.nama);
+                    } else {
+                        System.out.println("Data tidak ditemukan!");
+                    }
                     break;
+
                 case 3:
-                    System.out.print("Masukkan ID Barang yang akan dihapus: ");
-                    int idHapus = scanner.nextInt();
-                    bst.delete(idHapus);
-                    System.out.println("Perintah hapus dieksekusi (jika ID ada).");
+                    System.out.print("Hapus ID: ");
+                    int hapus = sc.nextInt();
+
+                    bst.root = bst.delete(bst.root, hapus);
+                    System.out.println("Data berhasil dihapus (jika ada)");
                     break;
+
                 case 4:
-                    System.out.println("--- Data Barang (Inorder) ---");
+                    System.out.println("=== INORDER ===");
                     bst.inorder(bst.root);
-                    System.out.println("\n-----------------------------");
                     break;
+
                 case 5:
-                    System.out.println("Keluar dari program. Terima kasih!");
+                    System.out.println("=== PREORDER ===");
+                    bst.preorder(bst.root);
                     break;
+
+                case 6:
+                    System.out.println("=== POSTORDER ===");
+                    bst.postorder(bst.root);
+                    break;
+
+                case 7:
+                    System.out.println("Keluar program...");
+                    return;
+
                 default:
-                    System.out.println("Pilihan tidak valid! Silakan pilih 1-5.");
+                    System.out.println("Pilihan tidak valid!");
             }
-        } catch (Exception e) {
-            System.out.println("Input harus berupa angka!");
-            scanner.nextLine(); // Membersihkan input yang salah
         }
     }
-    scanner.close();
-}
 }

@@ -1,176 +1,161 @@
 import csv
 
+# ================= NODE =================
 class Node:
-    def __init__(self, id_barang, nama):
-        self.id = id_barang
+    def __init__(self, id, nama):
+        self.id = int(id)
         self.nama = nama
         self.left = None
         self.right = None
 
+
+# ================= BST =================
 class BST:
     def __init__(self):
         self.root = None
 
-    # 1. Tambah Data
-    def insert(self, id_barang, nama):
-        if self.root is None:
-            self.root = Node(id_barang, nama)
+    # INSERT
+    def insert(self, root, id, nama):
+        if root is None:
+            return Node(id, nama)
+
+        if int(id) < root.id:
+            root.left = self.insert(root.left, id, nama)
         else:
-            self._insert_recursive(self.root, id_barang, nama)
+            root.right = self.insert(root.right, id, nama)
 
-    def _insert_recursive(self, node, id_barang, nama):
-        if id_barang < node.id:
-            if node.left is None:
-                node.left = Node(id_barang, nama)
-            else:
-                self._insert_recursive(node.left, id_barang, nama)
-        elif id_barang > node.id:
-            if node.right is None:
-                node.right = Node(id_barang, nama)
-            else:
-                self._insert_recursive(node.right, id_barang, nama)
+        return root
+
+    # SEARCH
+    def search(self, root, id):
+        if root is None or root.id == int(id):
+            return root
+
+        if int(id) < root.id:
+            return self.search(root.left, id)
         else:
-            # Jika ID sudah ada, perbarui nama barang
-            node.nama = nama
+            return self.search(root.right, id)
 
-    # 2. Cari Data
-    def search(self, id_barang):
-        result = self._search_recursive(self.root, id_barang)
-        if result:
-            print(f"Data ditemukan: ID = {result.id}, Nama = {result.nama}")
-        else:
-            print(f"Data dengan ID {id_barang} tidak ditemukan.")
-        return result
-
-    def _search_recursive(self, node, id_barang):
-        if node is None or node.id == id_barang:
-            return node
-        if id_barang < node.id:
-            return self._search_recursive(node.left, id_barang)
-        return self._search_recursive(node.right, id_barang)
-
-    # 3. Hapus Data
-    def delete(self, id_barang):
-        self.root = self._delete_recursive(self.root, id_barang)
-
-    def _delete_recursive(self, node, id_barang):
-        if node is None:
-            return node
-
-        if id_barang < node.id:
-            node.left = self._delete_recursive(node.left, id_barang)
-        elif id_barang > node.id:
-            node.right = self._delete_recursive(node.right, id_barang)
-        else:
-            # Node dengan satu child atau tanpa child
-            if node.left is None:
-                return node.right
-            elif node.right is None:
-                return node.left
-
-            # Node dengan dua child: Ambil nilai terkecil di subtree kanan
-            temp = self._min_value_node(node.right)
-            node.id = temp.id
-            node.nama = temp.nama
-            node.right = self._delete_recursive(node.right, temp.id)
-
-        return node
-
-    def _min_value_node(self, node):
+    # MIN VALUE (untuk delete)
+    def min_value_node(self, node):
         current = node
-        while current.left is not None:
+        while current.left:
             current = current.left
         return current
 
-    # 4. Traversal
-    def inorder(self, node):
-        if node:
-            self.inorder(node.left)
-            print(f"[{node.id}] {node.nama}", end=" -> ")
-            self.inorder(node.right)
+    # DELETE
+    def delete(self, root, id):
+        if root is None:
+            return root
 
-    def preorder(self, node):
-        if node:
-            print(f"[{node.id}] {node.nama}", end=" -> ")
-            self.preorder(node.left)
-            self.preorder(node.right)
-
-    def postorder(self, node):
-        if node:
-            self.postorder(node.left)
-            self.postorder(node.right)
-            print(f"[{node.id}] {node.nama}", end=" -> ")
-
-# --- TESTING PROGRAM ---
-# --- TESTING PROGRAM (MENU INTERAKTIF) ---
-if __name__ == '__main__':
-    bst = BST()
-    filename = 'data_baru.csv' # Pastikan nama file ini sama dengan yang ada di foldermu
-
-    # 1. Memuat data dari file saat program pertama kali jalan
-    try:
-        with open(filename, mode='r', encoding='utf-8') as file:
-            reader = csv.reader(file, delimiter=';') # Menggunakan pemisah titik koma
-            next(reader, None)  # Melewati baris header
-            for row in reader:
-                if len(row) >= 2:
-                    try:
-                        id_barang = int(row[0].strip().replace('"', ''))
-                        nama = row[1].strip().replace('"', '')
-                        bst.insert(id_barang, nama)
-                    except ValueError:
-                        pass # Abaikan baris jika ID bukan angka
-        print("Data dari CSV berhasil dimuat!\n")
-    except FileNotFoundError:
-        print(f"Error: File '{filename}' tidak ditemukan.")
-        print("Pastikan file berada di folder yang sama dan namanya benar.")
-
-    # 2. Membuat Menu Interaktif
-    while True:
-        print("\n=== MENU BST DATA BARANG (PYTHON) ===")
-        print("1. Tambah Data")
-        print("2. Cari Data")
-        print("3. Hapus Data")
-        print("4. Tampilkan Data (Inorder)")
-        print("5. Keluar")
-        
-        pilihan = input("Pilih menu (1-5): ")
-        
-        if pilihan == '1':
-            try:
-                id_baru = int(input("Masukkan ID Barang (Angka): "))
-                nama_baru = input("Masukkan Nama Barang: ")
-                bst.insert(id_baru, nama_baru)
-                print("Data berhasil ditambahkan!")
-            except ValueError:
-                print("Error: ID harus berupa angka!")
-                
-        elif pilihan == '2':
-            try:
-                id_cari = int(input("Masukkan ID Barang yang dicari: "))
-                bst.search(id_cari)
-            except ValueError:
-                print("Error: ID harus berupa angka!")
-                
-        elif pilihan == '3':
-            try:
-                id_hapus = int(input("Masukkan ID Barang yang akan dihapus: "))
-                bst.delete(id_hapus)
-                print("Perintah hapus dieksekusi (jika ID ada di dalam data).")
-            except ValueError:
-                print("Error: ID harus berupa angka!")
-                
-        elif pilihan == '4':
-            print("--- Data Barang (Inorder) ---")
-            if bst.root is None:
-                print("Data masih kosong.")
-            else:
-                bst.inorder(bst.root)
-                print("\n-----------------------------")
-                
-        elif pilihan == '5':
-            print("Keluar dari program. Terima kasih!")
-            break
-            
+        if int(id) < root.id:
+            root.left = self.delete(root.left, id)
+        elif int(id) > root.id:
+            root.right = self.delete(root.right, id)
         else:
-            print("Pilihan tidak valid! Silakan ketik angka 1 sampai 5.")
+            # 1 atau 0 child
+            if root.left is None:
+                return root.right
+            elif root.right is None:
+                return root.left
+
+            # 2 child
+            temp = self.min_value_node(root.right)
+            root.id = temp.id
+            root.nama = temp.nama
+
+            root.right = self.delete(root.right, temp.id)
+
+        return root
+
+    # TRAVERSAL
+    def inorder(self, root):
+        if root:
+            self.inorder(root.left)
+            print(root.id, "|", root.nama)
+            self.inorder(root.right)
+
+    def preorder(self, root):
+        if root:
+            print(root.id, "|", root.nama)
+            self.preorder(root.left)
+            self.preorder(root.right)
+
+    def postorder(self, root):
+        if root:
+            self.postorder(root.left)
+            self.postorder(root.right)
+            print(root.id, "|", root.nama)
+
+
+# ================= LOAD CSV =================
+def load_csv(filename, bst):
+    try:
+        with open(filename, mode='r') as file:
+            reader = csv.DictReader(file)
+
+            for row in reader:
+                bst.root = bst.insert(
+                    bst.root,
+                    row['id'],
+                    row['nama']
+                )
+
+    except FileNotFoundError:
+        print("File CSV tidak ditemukan!")
+
+
+# ================= MAIN PROGRAM =================
+bst = BST()
+load_csv('data100.xlsx-data_barang.csv', bst)
+
+while True:
+    print("\n=== MENU ===")
+    print("1. Tambah Data")
+    print("2. Cari Data")
+    print("3. Hapus Data")
+    print("4. Inorder")
+    print("5. Preorder")
+    print("6. Postorder")
+    print("7. Keluar")
+
+    pilihan = input("Pilih: ")
+
+    if pilihan == "1":
+        id = input("ID: ")
+        nama = input("Nama: ")
+        bst.root = bst.insert(bst.root, id, nama)
+        print("Data berhasil ditambahkan!")
+
+    elif pilihan == "2":
+        id = input("Cari ID: ")
+        hasil = bst.search(bst.root, id)
+
+        if hasil:
+            print("Ditemukan:", hasil.id, "|", hasil.nama)
+        else:
+            print("Data tidak ditemukan!")
+
+    elif pilihan == "3":
+        id = input("Hapus ID: ")
+        bst.root = bst.delete(bst.root, id)
+        print("Data berhasil dihapus (jika ada)")
+
+    elif pilihan == "4":
+        print("=== INORDER ===")
+        bst.inorder(bst.root)
+
+    elif pilihan == "5":
+        print("=== PREORDER ===")
+        bst.preorder(bst.root)
+
+    elif pilihan == "6":
+        print("=== POSTORDER ===")
+        bst.postorder(bst.root)
+
+    elif pilihan == "7":
+        print("Keluar program...")
+        break
+
+    else:
+        print("Pilihan tidak valid!")
